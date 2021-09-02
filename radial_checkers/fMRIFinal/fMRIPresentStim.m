@@ -1,40 +1,21 @@
 function scan = fMRIPresentStim(comment, paradigmNumber)
 
 Screen('Preference', 'SkipSyncTests', 1);
+
 %% Save input parameters
 scan.comment = comment;
 scan.paradigmNumber = paradigmNumber;
 
-%% General Parameters
-%Resultfile directory
-resultdir = './Results';
-gratingPath = '/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/';
-
-%Stimulus parameters
-fixRadius = 0.25; %fixation dot radius in degrees
-fixColor = [1 0 0];
-
-fovWidth        = 30;
-fovHeight       = 22.5;
-
 %% Defualt File specifc Parameters
-
-% Defualt Stim Parameters:
-mean = 0.5; % mean color
-amplitude = 0.5; % contrast
-spatialF = 0.5; %cycles per d
-gratingSpeed = 1; %deg per s
-gratingColor = 0; %black and white
 
 % Default Frame Parameters:
 frameLineWidth = 0.5; % in degrees
 frameBlankWidth = 0.1; % in degrees
 
-
 %% File specifc Parameters
 
-%load in stimulus params
-GratingStimulus1
+%load in params
+presentStimParams
 
 %load in frame params
 
@@ -44,30 +25,6 @@ conditionNone	= 0;
 conditionStim	= 1;
 conditionEnd	= 2;
 
-testParadigm = [
-    0    conditionNone;
-    3    conditionStim;
-    5   conditionNone;
-    7   conditionStim;
-    9   conditionNone;
-    11   conditionEnd;    
-    ];
-
-runParadigmTest = [
-    0    conditionNone;
-    20   conditionStim;
-    30   conditionNone;
-    42   conditionStim;    
-    56   conditionNone;
-    72   conditionEnd;    
-    ];
-
-runParadigmFinal = [
-    0 conditionNone;
-    15 conditionStim;
-    cumsum(repmat([10;12],16,1))+15 repmat([conditionNone;conditionStim],16,1)
-    ];
-runParadigmFinal(end,2)=conditionEnd;
 %% Chosse current paradigm and save it
 switch paradigmNumber
     case 0
@@ -78,6 +35,7 @@ switch paradigmNumber
         paradigm = runParadigmFinal;
 end
                 
+stim = generateStimulus(paradigmNumber)
 %% Open screen
 AssertOpenGL;
 try
@@ -192,8 +150,6 @@ try
     
 	diameter = stimRadius - frameHeight*2;
 	radius = diameter/2;
-	phase = 0;
-	cyclePerPixel = spatialF*degPerPix; %spatialF in cyclesPerDeg
     %stim(1) = OutwardStimulus('/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/GratingStimulus1.m',diameter,screenProperties);
     %stim(2) = PulseStimulus('/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/GratingStimulus1.m',1, diameter,screenProperties);
 
@@ -207,39 +163,14 @@ try
 
     Screen('Flip', windowPtr);
     
-
-    % TODO switch to array (not cell array) and make interface
-    switch paradigmNumber
-        case {0,1}
-            stim = {
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus5.m'),diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus1.m'),1, diameter,screenProperties)
-            };
-        case 2
-            stim = {
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus1.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus2.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus3.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus4.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus5.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus6.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus7.m'),diameter,screenProperties),
-                OutwardStimulus(strcat(gratingPath,'GratingStimulus8.m'),diameter,screenProperties),
-
-                PulseStimulus(strcat(gratingPath,'GratingStimulus1.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus2.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus3.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus4.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus5.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus6.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus7.m'),1, diameter,screenProperties),
-                PulseStimulus(strcat(gratingPath,'GratingStimulus8.m'),1, diameter,screenProperties)
-            };
+    % create the textures now that we have the diameter, screenprops,
+    % and have shown the loading screen
+    for s = 1:length(stim)
+        stim{s}.createTextures(diameter,screenProperties)
     end
-
+    
     gratingRect = CenterRectOnPointd([0 0 diameter diameter],centerX,centerY);
 
-    
     frameRect = []
     for i=1:3
         padding = frameLineWidthPix*2*i+frameBlankWidthPix*2*(i-1);
@@ -350,7 +281,6 @@ try
         end
         if laststate == conditionStim && state ~= conditionStim
             currentStimulus = currentStimulus+1;
-            disp(currentStimulus);
         end
 
         %% Initialize new state
