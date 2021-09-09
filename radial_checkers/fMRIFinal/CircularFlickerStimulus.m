@@ -1,4 +1,4 @@
-classdef CheckerFlickerStimulus < handle
+classdef CircularFlickerStimulus < handle
    properties
        tex
        stimParams
@@ -7,11 +7,10 @@ classdef CheckerFlickerStimulus < handle
        show  {mustBeNumeric}
    end
    methods (Access = public)
-      function obj = CheckerFlickerStimulus(checkerStimParams,flickerFrequency)
+      function obj = CircularFlickerStimulus(checkerStimParams,flickerFrequency)
         if nargin>1  && isfield(checkerStimParams,'mean') ...
                      && isfield(checkerStimParams,'amplitude') ...
-                     && isfield(checkerStimParams,'spatialF') ...
-                     && isfield(checkerStimParams,'cyclesPerRotation')
+                     && isfield(checkerStimParams,'spatialF')
 
             % Passed in stim params
             obj.stimParams = checkerStimParams;
@@ -20,7 +19,6 @@ classdef CheckerFlickerStimulus < handle
             obj.stimParams.mean = 0.5; % mean color
             obj.stimParams.amplitude = 0.5; % contrast
             obj.stimParams.spatialF = 0.5; %cycles per d
-            obj.stimParams.cyclesPerRotation = 8; % checkers in one rotation
         end
         	
 		if nargin==2
@@ -45,14 +43,14 @@ classdef CheckerFlickerStimulus < handle
 
         phase=0;
         grating = zeros([size(R), 2]);
-        grating(:,:,1) = obj.stimParams.mean * ones(diameter) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter)) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+        grating(:,:,1) = obj.stimParams.mean * ones(diameter) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter));
         grating(:,:,2) = (R <= diameter/2); % alpha mask
         obj.tex(1) = Screen('MakeTexture', screenProperties.window, grating);
-        
-        % flip contrast
-        grating(:,:,1) = obj.stimParams.mean * ones(diameter) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter)) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+
+
+        grating(:,:,1) = obj.stimParams.mean * ones(diameter) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter));
         obj.tex(2) = Screen('MakeTexture', screenProperties.window, grating);
-        
+
         obj.lastSwitchTime = 0;
         obj.show = 1;
       end

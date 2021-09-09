@@ -21,6 +21,7 @@ conditionStim	= 1;
 conditionEnd	= 2;
 
 % paradigm 0
+% for test triggers (no fMRI)
 testParadigm = [
     0    conditionNone;
     3    conditionStim;
@@ -31,6 +32,7 @@ testParadigm = [
     ];
 
 % paradigm 1
+% for testing with fMRI
 runParadigmTest = [
     0    conditionNone;
     20   conditionStim;
@@ -41,6 +43,9 @@ runParadigmTest = [
     ];
 
 % paradigm 2
+% for running with fMRI
+% 15 volume baseline
+% then 16 cycles of 10 volumes stimulus then 12 baseline
 runParadigmFinal = [
     0 conditionNone;
     15 conditionStim;
@@ -61,9 +66,9 @@ function stim = generateStim(paradigmNumber)
     switch paradigmNumber
         case {0,1}
 			GratingStimulus1
-			stim{1} = CheckerOutwardStimulus(stimParams);
+			stim{1} = RadialFlickerStimulus(stimParams, 1);
 			GratingStimulus5
-			stim{2} = CheckerFlickerStimulus(stimParams, 8);
+			stim{2} = CircularFlickerStimulus(stimParams, 1);
         case 2
 			GratingStimulus1
 			stim{1} = CheckerOutwardStimulus(stimParams);

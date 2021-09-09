@@ -47,8 +47,11 @@ try
 
     screens=Screen('Screens');
     screenNumber=max(screens);
+    if (screenNumber == 3)
+        screenNumber = [1 2];
+    end
     [windowPtr, windowRect] = ...
-        PsychImaging('OpenWindow', screenNumber, 0,[0 0 1000 1000]);
+        PsychImaging('OpenWindow', screenNumber, 0);
 
     %Enable alpha blending with proper blend-function.
     %We need it for drawing of smoothed points:
@@ -58,35 +61,31 @@ try
     %% Psychtoolbox setup code comes here
     HideCursor;
     %Let matlab command window ignore incoming keypresses
-    ListenChar(2);
     KbName('UnifyKeyNames');
     
     psychtoolbox_forp_id=-1;
     
     if paradigmNumber ~= 0
         % List of vendor IDs for valid FORP devices:
-        vendorIDs = [1240 6171];
+        % vendorIDs = [1240 6171];
         
         Devices = PsychHID('Devices');
         % Loop through all KEYBOARD devices with the vendorID of FORP's vendor:
+        disp(Devices);
         for i=1:size(Devices,2)
-            if (strcmp(Devices(i).usageName,'Keyboard') || ...
-                    strcmp(Devices(i).usageName,'Keypad')) && ...
-                    ismember(Devices(i).vendorID, vendorIDs)
-                psychtoolbox_forp_id=i;
-                break;
-            end
+            psychtoolbox_forp_id=i;
+            break;
         end
         
         if psychtoolbox_forp_id==-1
             error('No FORP-Device detected on your system');
-            
         end
     end
     
     keysOfInterest=zeros(1,256);
 	keysOfInterest(KbName('t'))=1;
 	% only look for t as trigger
+    disp(psychtoolbox_forp_id);
 	KbQueueCreate(psychtoolbox_forp_id, keysOfInterest);	
 	KbQueueStart;
     
@@ -116,7 +115,7 @@ try
     %independend of contrast
     %all intensities in [relmin,relmax] scale with contrast setting
     [oldgammatable, dacbits, reallutsize] = ...
-        Screen('ReadNormalizedGammaTable', screenNumber);
+        Screen('ReadNormalizedGammaTable', windowPtr);
 
     absMinIndex = 0;
     absMaxIndex = 1;
@@ -290,10 +289,9 @@ try
     end
     %% Clean up
     Priority(0);
+    %Screen('LoadNormalizedGammaTable', windowPtr, oldgammatable);
     Screen('CloseAll');
-    Screen('LoadNormalizedGammaTable', screenNumber, oldgammatable);
     ShowCursor;
-    ListenChar(0);
     filename = mfilename('fullpath');
     fid = fopen([filename '.m']);
     lineNumber = 0;
@@ -311,8 +309,8 @@ try
 catch
     %catch errors
     Priority(0);
+    %Screen('LoadNormalizedGammaTable', windowPtr, oldgammatable);
     Screen('CloseAll');
-    Screen('LoadNormalizedGammaTable', screenNumber, oldgammatable);
     ShowCursor;
     filename = mfilename('fullpath');
     fid = fopen([filename '.m']);
@@ -328,7 +326,6 @@ catch
     end
     fclose(fid);
     save([resultdir '/' comment], 'scan');
-    ListenChar(0);
     err = lasterror;
     disp(err.stack);
     rethrow(lasterror);
