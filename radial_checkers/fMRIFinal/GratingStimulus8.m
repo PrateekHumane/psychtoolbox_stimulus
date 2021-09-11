@@ -6,7 +6,7 @@
 % fast 
 
 stimParams.mean= 0.5; %black and white
-stimParams.amplitude = 0.1; % contrast
+stimParams.amplitude = 0.075; % contrast
 stimParams.spatialF = 2; %cycles per d
 stimParams.gratingSpeed = 4; %deg per s
 stimParams.gratingColor = 0; %black and white

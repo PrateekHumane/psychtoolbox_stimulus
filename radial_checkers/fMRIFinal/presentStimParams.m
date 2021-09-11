@@ -7,6 +7,9 @@ gratingPath = '/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fM
 fixRadius = 0.25; %fixation dot radius in degrees
 fixColor = [1 0 0];
 
+screenDiagonalSize = 81.28; % screen diagonal size in cm
+viewingDistance = 100; %subject distance to screen in cm
+
 fovWidth        = 30;
 fovHeight       = 22.5;
 
@@ -46,10 +49,15 @@ runParadigmTest = [
 % for running with fMRI
 % 15 volume baseline
 % then 16 cycles of 10 volumes stimulus then 12 baseline
+firstBaselineEnd = 25;
+numCycles 		 = 12;
+cycleStim		 = 12;
+cycleBaseline	 = 16;
+
 runParadigmFinal = [
     0 conditionNone;
-    15 conditionStim;
-    cumsum(repmat([10;12],16,1))+15 repmat([conditionNone;conditionStim],16,1)
+    firstBaselineEnd conditionStim;
+    cumsum(repmat([cycleStim;cycleBaseline],numCycles,1))+firstBaselineEnd repmat([conditionNone;conditionStim],numCycles,1)
     ];
 
 runParadigmFinal(end,2)=conditionEnd;
@@ -66,27 +74,10 @@ function stim = generateStim(paradigmNumber)
     switch paradigmNumber
         case {0,1}
 			GratingStimulus1
-			stim{1} = RadialFlickerStimulus(stimParams, 1);
+			stim{1} = RadialFlickerStimulus(stimParams, 5);
 			GratingStimulus5
-			stim{2} = CircularFlickerStimulus(stimParams, 1);
+			stim{2} = CircularPulseStimulus(stimParams, 1);
         case 2
-			GratingStimulus1
-			stim{1} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus2
-			stim{2} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus3
-			stim{3} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus4
-			stim{4} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus5
-			stim{5} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus6
-			stim{6} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus7
-			stim{7} = CheckerOutwardStimulus(stimParams);
-			GratingStimulus8
-			stim{8} = CheckerOutwardStimulus(stimParams);
-
             GratingStimulus1
             stim{1} = CheckerPulseStimulus(stimParams, 1);
             GratingStimulus2
@@ -103,5 +94,23 @@ function stim = generateStim(paradigmNumber)
             stim{7} = CheckerPulseStimulus(stimParams, 1);
             GratingStimulus8
             stim{8} = CheckerPulseStimulus(stimParams, 1);
+
+			GratingStimulus1
+			stim{9} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus2
+			stim{10} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus3
+			stim{11} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus4
+			stim{12} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus5
+			stim{13} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus6
+			stim{14} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus7
+			stim{15} = CheckerFlickerStimulus(stimParams);
+			GratingStimulus8
+			stim{16} = CheckerFlickerStimulus(stimParams);
+
     end	
 end

@@ -35,7 +35,8 @@ classdef CheckerFlickerStimulus < handle
       function obj = createTextures(obj, diameter,screenProperties)
 
         cyclePerPixel = obj.stimParams.spatialF*screenProperties.degPerPix; %spatialF in cyclesPerDeg
-        [X,Y] = meshgrid(-(diameter-1)/2:1:(diameter-1)/2);
+		radius = diameter/2;
+		[X,Y] = meshgrid(-radius(1):1:radius(1),-radius(2):1:radius(2));
         R = sqrt(X.^2+Y.^2);
         T = atan2(-Y,X);
 
@@ -44,13 +45,14 @@ classdef CheckerFlickerStimulus < handle
         % 1/cycles/frame = frames/cycle
 
         phase=0;
-        grating = zeros([size(R), 2]);
-        grating(:,:,1) = obj.stimParams.mean * ones(diameter) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter)) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
-        grating(:,:,2) = (R <= diameter/2); % alpha mask
+        grating = zeros([size(R), 1]);
+        grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+
+        %grating(:,:,2) = (R <= diameter/2); % alpha mask for circle
         obj.tex(1) = Screen('MakeTexture', screenProperties.window, grating);
         
         % flip contrast
-        grating(:,:,1) = obj.stimParams.mean * ones(diameter) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(diameter)) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+        grating(:,:,1) = obj.stimParams.mean * ones(size(R)) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
         obj.tex(2) = Screen('MakeTexture', screenProperties.window, grating);
         
         obj.lastSwitchTime = 0;

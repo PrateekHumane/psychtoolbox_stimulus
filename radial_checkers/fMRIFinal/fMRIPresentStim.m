@@ -105,9 +105,11 @@ try
     [centerX, centerY] = RectCenter(windowRect);
 
     scan.windowRect = windowRect;
-    widthDegPerPixel = (fovWidth/2)/(screenWidth/2-0.5);
-    heightDegPerPixel= (fovHeight/2)/(screenHeight/2-0.5);
-    degPerPix = heightDegPerPixel;    
+	
+	degPerCm = (2*atan(screenDiagonalSize/(2*viewingDistance))*180/pi)/screenDiagonalSize;
+    % widthDegPerPixel = (fovWidth/2)/(screenWidth/2-0.5);
+    % heightDegPerPixel= (fovHeight/2)/(screenHeight/2-0.5);
+    degPerPix = degPerCm * (screenDiagonalSize/sqrt(screenWidth^2+screenHeight^2));    
     pixPerDeg = 1/degPerPix;    
 
     %% Save old LUT, define new LUT and define some colors
@@ -136,7 +138,11 @@ try
     scan.ifi = ifi;
 
     %% General setup code goes here (e.g. stimulus rendering)
-    stimRadius = min([screenWidth screenHeight]);
+
+	fixRadius = round(pixPerDeg * fixRadius);
+
+    %stimRadius = min([screenWidth screenHeight]);
+    stimRadius = [screenWidth screenHeight];
 
     screenProperties.ifi = ifi;
     screenProperties.degPerPix = degPerPix;
@@ -144,9 +150,12 @@ try
     
 	frameLineWidthPix = round(pixPerDeg * frameLineWidth);
 	frameBlankWidthPix = round(pixPerDeg * frameBlankWidth);
-	fixRadius = round(pixPerDeg * fixRadius);
 	frameHeight = (frameLineWidthPix + frameBlankWidthPix) * 3;
-    
+
+	% no frame
+	frameHeight = 0;
+
+
 	diameter = stimRadius - frameHeight*2;
 	radius = diameter/2;
     %stim(1) = OutwardStimulus('/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/GratingStimulus1.m',diameter,screenProperties);
@@ -168,26 +177,26 @@ try
         stim{s}.createTextures(diameter,screenProperties)
     end
     
-    gratingRect = CenterRectOnPointd([0 0 diameter diameter],centerX,centerY);
+    gratingRect = CenterRectOnPointd([0 0 diameter(1) diameter(2)],centerX,centerY);
 
     frameRect = []
     for i=1:3
         padding = frameLineWidthPix*2*i+frameBlankWidthPix*2*(i-1);
-        frameRect = [frameRect transpose(CenterRectOnPointd([0 0 diameter+padding diameter+padding],centerX,centerY))];
+        frameRect = [frameRect transpose(CenterRectOnPointd([0 0 diameter(1)+padding diameter(2)+padding],centerX,centerY))];
     end
     framePoly = [
         centerX-fixRadius centerY-fixRadius;
-        centerX-fixRadius centerY-radius;
-        centerX+fixRadius centerY-radius;
+        centerX-fixRadius centerY-radius(2);
+        centerX+fixRadius centerY-radius(2);
         centerX+fixRadius centerY-fixRadius;
-        centerX+radius centerY-fixRadius;
-        centerX+radius centerY+fixRadius;
+        centerX+radius(1) centerY-fixRadius;
+        centerX+radius(1) centerY+fixRadius;
         centerX+fixRadius centerY+fixRadius;
-        centerX+fixRadius centerY+radius;
-        centerX-fixRadius centerY+radius;
+        centerX+fixRadius centerY+radius(2);
+        centerX-fixRadius centerY+radius(2);
         centerX-fixRadius centerY+fixRadius;
-        centerX-radius centerY+fixRadius;
-        centerX-radius centerY-fixRadius;
+        centerX-radius(1) centerY+fixRadius;
+        centerX-radius(1) centerY-fixRadius;
     ];
     fixBackRect=CenterRectOnPointd([0 0 fixRadius*2*3 fixRadius*2*3],centerX,centerY);
     fixRect=CenterRectOnPointd([0 0 fixRadius*2 fixRadius*2],centerX,centerY);
@@ -241,7 +250,7 @@ try
             case conditionStim
                 stimulusTexture = stim{mod(currentStimulus,length(stim))+1}.getNextTexture(timeProperties);
                 Screen('DrawTexture', windowPtr, stimulusTexture, [],gratingRect, 0,0);
-                Screen('FrameOval', windowPtr, [0  0 0],frameRect,frameLineWidthPix);
+                %Screen('FrameOval', windowPtr, [0  0 0],frameRect,frameLineWidthPix);
                 Screen('FramePoly', windowPtr, [0 0 0],framePoly);
 
             case conditionNone
