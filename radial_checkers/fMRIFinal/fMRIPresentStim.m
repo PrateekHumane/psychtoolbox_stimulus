@@ -1,4 +1,4 @@
-function scan = fMRIPresentStim(comment, paradigmNumber)
+function scan = fMRIPresentStim(comment, paradigmNumber, stimOrder)
 
 Screen('Preference', 'SkipSyncTests', 1);
 
@@ -35,7 +35,7 @@ switch paradigmNumber
         paradigm = runParadigmFinal;
 end
                 
-stim = generateStimulus(paradigmNumber)
+stim = generateStimulus(paradigmNumber);
 %% Open screen
 AssertOpenGL;
 try
@@ -46,13 +46,13 @@ try
     oldgammatable = repmat(linspace(0,1,256)',[1 3]);
 
     screens=Screen('Screens');
-    screenNumber=max(screens);
-    if (screenNumber == 3)
-        screenNumber = [1 2];
-    end
+    screenNumber=min(screens);
+%     if (screenNumber == 3)
+%         screenNumber = [1 2];
+%     end
     [windowPtr, windowRect] = ...
-        PsychImaging('OpenWindow', screenNumber, 0);
-
+        PsychImaging('OpenWindow', screenNumber, 0, [0 0 1920 1080]);
+    %windowRect = [0 0 1920 1080];
     %Enable alpha blending with proper blend-function.
     %We need it for drawing of smoothed points:
     Screen('BlendFunction', windowPtr,...
@@ -85,8 +85,8 @@ try
     keysOfInterest=zeros(1,256);
 	keysOfInterest(KbName('t'))=1;
 	% only look for t as trigger
-    disp(psychtoolbox_forp_id);
-	KbQueueCreate(psychtoolbox_forp_id, keysOfInterest);	
+    % disp(psychtoolbox_forp_id);
+	KbQueueCreate(-1, keysOfInterest);	
 	KbQueueStart;
     
     [keyPress, keyTime, keyID] = KbCheck(-1);
@@ -116,8 +116,8 @@ try
     %absmax, absmin and absmean luminance and derived colors are absolute,
     %independend of contrast
     %all intensities in [relmin,relmax] scale with contrast setting
-    [oldgammatable, dacbits, reallutsize] = ...
-        Screen('ReadNormalizedGammaTable', windowPtr);
+%     [oldgammatable, dacbits, reallutsize] = ...
+%         Screen('ReadNormalizedGammaTable', windowPtr);
 
     absMinIndex = 0;
     absMaxIndex = 1;
@@ -217,85 +217,94 @@ try
 
     Screen('Flip', windowPtr);
     Screen('BlendFunction', windowPtr, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+	
+	scan.runs = {};
 
-    %% Prepare first conditionamplitude
-    state = conditionNone;
-    laststate = conditionNone;
-    trigger = true;
+	for run = 1:runs
+	
+	    %% Prepare first conditionamplitude
+	    state = conditionNone;
+	    laststate = conditionNone;
+	    trigger = true;
+	
+	    Screen('FillRect', windowPtr, gray);
+	
+		fixRect=CenterRectOnPointd([0 0 fixRadius*2 fixRadius*2],centerX,centerY)
+	    Screen('FillOval', windowPtr, fixColor, fixRect);
+	    currentConditionStartTime = 0;
+	    currentStimulus = 0;
+	
+	    %% Wait for trigger
+	    scan.runs{run}.triggerTimes = KbQueueWait;
+	    
+	    %% MAIN LOOP
+	    while state~=conditionEnd
+	        %% Flip screen and estimate time of next screen;
+	        vbl         = [vbl ; [Screen('Flip', windowPtr) , state, trigger]];
+	        t           = (vbl(end,1)-vbl(1,1));
+	        nextT       = (vbl(end,1)-vbl(1,1))+ifi;
+	        framecount  = floor((vbl(end,1) - vbl(1,1))/ifi) + 1;
+	        scan.runs{run}.vbl = vbl;
+	
+	        timeProperties.t = t;
+	        timeProperties.framecount = framecount;
+	        
+	        %% Drawing commands
+	        switch state
+	            case conditionStim
+	                stimulusTexture = stim{stimRunIndices(run,mod(currentStimulus,length(stim))+1,stimOrder)}.getNextTexture(timeProperties);
+	                Screen('DrawTexture', windowPtr, stimulusTexture, [],gratingRect, 0,0);
+	                %Screen('FrameOval', windowPtr, [0  0 0],frameRect,frameLineWidthPix);
+	                Screen('FramePoly', windowPtr, [0 0 0],framePoly);
+	
+	            case conditionNone
+	        end
+	
+	        Screen('FillOval',  windowPtr, [1 0 0], fixRect);
+	
+	        Screen('DrawingFinished', windowPtr);
+	
+	        %% Process key Input
+	        % Check for trigger
+	        [ pressed, firstPress]=KbQueueCheck;	% Collect keyboard events since KbQueueStart was invoked
+	        if pressed && firstPress(KbName('t'))
+	            scan.runs{run}.triggerTimes = [scan.runs{run}.triggerTimes firstPress(KbName('t'))];
+	            trigger = true;
+	        else
+	            trigger = false;
+	        end
+	        
+	        
+	        [keyPress, keyTime, keyID] = KbCheck(-1);
+	
+	        if any(keyID-oldKeyID)
+	            keyPressID = keyID;
+	            oldKeyID = keyID;
+	        else
+	            keyPressID = zeros(size(keyID));
+	        end
+	
+	        %% Update state
+	        laststate = state;
+	
+	        state = paradigm(min(find(paradigm(:,1) > length(scan.runs{run}.triggerTimes)))-1,2);
+	        if isempty(state) || keyPressID(KbName('Escape'))
+	            state = conditionEnd;
+	        end
+	        if laststate == conditionStim && state ~= conditionStim
+	            currentStimulus = currentStimulus+1;
+	        end
+	
+	        %% Initialize new state
+	        if state~=laststate
+	            currentConditionStartTime = nextT;
+	        end
+	    end
 
-    Screen('FillRect', windowPtr, gray);
-
-	fixRect=CenterRectOnPointd([0 0 fixRadius*2 fixRadius*2],centerX,centerY)
-    Screen('FillOval', windowPtr, fixColor, fixRect);
-    currentConditionStartTime = 0;
-    currentStimulus = 0;
-
-    %% Wait for trigger
-    scan.triggerTimes = KbQueueWait;
-    
-    %% MAIN LOOP
-    while state~=conditionEnd
-        %% Flip screen and estimate time of next screen;
-        vbl         = [vbl ; [Screen('Flip', windowPtr) , state, trigger]];
-        t           = (vbl(end,1)-vbl(1,1));
-        nextT       = (vbl(end,1)-vbl(1,1))+ifi;
-        framecount  = floor((vbl(end,1) - vbl(1,1))/ifi) + 1;
-        scan.vbl = vbl;
-
-        timeProperties.t = t;
-        timeProperties.framecount = framecount;
-        
-        %% Drawing commands
-        switch state
-            case conditionStim
-                stimulusTexture = stim{mod(currentStimulus,length(stim))+1}.getNextTexture(timeProperties);
-                Screen('DrawTexture', windowPtr, stimulusTexture, [],gratingRect, 0,0);
-                %Screen('FrameOval', windowPtr, [0  0 0],frameRect,frameLineWidthPix);
-                Screen('FramePoly', windowPtr, [0 0 0],framePoly);
-
-            case conditionNone
-        end
-
-        Screen('FillOval',  windowPtr, [1 0 0], fixRect);
-
-        Screen('DrawingFinished', windowPtr);
-
-        %% Process key Input
-        % Check for trigger
-        [ pressed, firstPress]=KbQueueCheck;	% Collect keyboard events since KbQueueStart was invoked
-        if pressed && firstPress(KbName('t'))
-            scan.triggerTimes = [scan.triggerTimes firstPress(KbName('t'))];
-            trigger = true;
-        else
-            trigger = false;
-        end
-        
-        
-        [keyPress, keyTime, keyID] = KbCheck(-1);
-
-        if any(keyID-oldKeyID)
-            keyPressID = keyID;
-            oldKeyID = keyID;
-        else
-            keyPressID = zeros(size(keyID));
-        end
-
-        %% Update state
-        laststate = state;
-
-        state = paradigm(min(find(paradigm(:,1) > length(scan.triggerTimes)))-1,2);
-        if isempty(state) || keyPressID(KbName('Escape'))
-            state = conditionEnd;
-        end
-        if laststate == conditionStim && state ~= conditionStim
-            currentStimulus = currentStimulus+1;
-        end
-
-        %% Initialize new state
-        if state~=laststate
-            currentConditionStartTime = nextT;
-        end
-    end
+	    Screen('FillRect', windowPtr, gray);
+		Screen('Flip', windowPtr);
+	
+	end
     %% Clean up
     Priority(0);
     %Screen('LoadNormalizedGammaTable', windowPtr, oldgammatable);

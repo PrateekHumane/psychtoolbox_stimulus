@@ -8,8 +8,9 @@ classdef CircularFlickerStimulus < handle
    end
    methods (Access = public)
       function obj = CircularFlickerStimulus(checkerStimParams,flickerFrequency)
-        if nargin>1  && isfield(checkerStimParams,'mean') ...
+        if nargin>=1  && isfield(checkerStimParams,'mean') ...
                      && isfield(checkerStimParams,'amplitude') ...
+                     && isfield(checkerStimParams,'gratingColor') ...
                      && isfield(checkerStimParams,'spatialF')
 
             % Passed in stim params
@@ -19,6 +20,7 @@ classdef CircularFlickerStimulus < handle
             obj.stimParams.mean = 0.5; % mean color
             obj.stimParams.amplitude = 0.5; % contrast
             obj.stimParams.spatialF = 0.5; %cycles per d
+            obj.stimParams.gratingColor = 0; %black and white
         end
         	
 		if nargin==2
@@ -37,19 +39,42 @@ classdef CircularFlickerStimulus < handle
         [X,Y] = meshgrid(-radius(1):1:radius(1),-radius(2):1:radius(2));
         R = sqrt(X.^2+Y.^2);
         T = atan2(-Y,X);
+        
+        % grating colors
+        colorBlackAndWhite = 0;
+        colorBlueAndYellow = 1;
+        colorRedAndGreen   = 2;
+
 
         % Calculation for deg/second -> frames/cycle
         % deg/second * cycles/deg * seconds/frame = cycles/frame
         % 1/cycles/frame = frames/cycle
 
         phase=0;
-        grating = zeros([size(R), 1]);
-        grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
-        % grating(:,:,2) = (R <= diameter/2); % alpha mask for circle
+        switch obj.stimParams.gratingColor
+                case colorBlackAndWhite
+                    grating = zeros([size(R), 1]);
+                    grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
+                    % grating(:,:,2) = (R <= diameter/2); % alpha mask for circle
+                case colorRedAndGreen
+                    grating = zeros([size(R), 3]);
+                    sinMatrix = sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
+                    grating(:,:,1) = obj.stimParams.amplitude*(sinMatrix.*(sinMatrix >= 0));
+                    grating(:,:,2) = obj.stimParams.amplitude*abs(sinMatrix.*(sinMatrix <= 0));                    
+        end
         obj.tex(1) = Screen('MakeTexture', screenProperties.window, grating);
 
-
-        grating(:,:,1) = obj.stimParams.mean * ones(size(R)) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
+        switch obj.stimParams.gratingColor
+                case colorBlackAndWhite
+                    grating = zeros([size(R), 1]);
+                    grating(:,:,1) = obj.stimParams.mean * ones(size(R)) - obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
+                    % grating(:,:,2) = (R <= diameter/2); % alpha mask for circle
+                case colorRedAndGreen
+                    grating = zeros([size(R), 3]);
+                    sinMatrix = sin(2*pi* cyclePerPixel * R - phase*ones(size(R)));
+                    grating(:,:,1) = obj.stimParams.amplitude*abs(sinMatrix.*(sinMatrix <= 0));
+                    grating(:,:,2) = obj.stimParams.amplitude*(sinMatrix.*(sinMatrix >= 0));                    
+        end
         obj.tex(2) = Screen('MakeTexture', screenProperties.window, grating);
 
         obj.lastSwitchTime = 0;

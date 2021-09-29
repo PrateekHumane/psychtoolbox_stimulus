@@ -1,19 +1,19 @@
 % Stimulus parameters
 
-% stimulus 1:
-% high contrast
-% high spatial frequency
-% fast 
+% stimulus 12:
+% red and green
+% low spatial frequency
+% slow 
 
 stimParams.mean= 0.5; %black and white
 stimParams.amplitude = 0.5; % contrast
 
 %stimParams.spatialF = 2; %cycles per d
 syms x;
-symSpatialFreqFun = int((8-0.16*x),[0,x]);
+symSpatialFreqFun = int((2-0.04*x),[0,x]);
 stimParams.spatialFreqFun = matlabFunction(symSpatialFreqFun);
 
-stimParams.gratingSpeed = 16; %cycles per s
+stimParams.gratingSpeed = 2; %deg per s
 
 % # cycles so that spatialF is same at 5 deg radially and circularly
 stimParams.cyclesPerRotation = round(stimParams.spatialFreqFun(5)*2*pi*5); % cycles/deg * (2*PI*R) deg where R=5 degrees

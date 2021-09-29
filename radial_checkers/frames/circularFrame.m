@@ -1,3 +1,4 @@
+
 % Clear the workspace and the screen
 sca;
 close all;
@@ -10,7 +11,7 @@ PsychDefaultSetup(2);
 
 % Get the screen numbers
 screens = Screen('Screens');
-1
+
 % Draw to the external screen if avaliable
 screenNumber = max(screens);
 
@@ -44,7 +45,7 @@ frameLineWidth = 0.5; % in degrees
 frameBlankWidth = 0.1; % in degrees
 
 % Open an on screen window
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 1000 1000]);
 
 % Get the size of the on screen window
 [screenXpixels, screenYpixels] = Screen('WindowSize', window);
@@ -83,6 +84,9 @@ frameBlankWidthPix = round(pixPerDeg * frameBlankWidth);
 fixRadius = round(pixPerDeg * fixRadius);
 frameHeight = (frameLineWidthPix + frameBlankWidthPix) * 3;
 
+deltaCyclesPerDeg = (10 - 20)/30; % (1 cycle/deg - 2.5 cycles/deg)/5 deg = -1.5/5 cycles/deg^2
+deltaCyclesPerPixel = deltaCyclesPerDeg * degPerPix* degPerPix; % cycles/deg^2 -> cycles/px^2
+
 diameter = stimRadius - frameHeight*2;
 radius = diameter/2;
 phase = 0;
@@ -91,9 +95,22 @@ cyclePerPixel = spatialF*degPerPix; %spatialF in cyclesPerDeg
 R = sqrt(X.^2+Y.^2);
 T = atan2(-Y,X);
 grating = zeros([size(R), 2]);
+
+
 %grating(:,:,1) =  mean * ones(diameter) + amplitude*sin(2*pi* cyclePerPixel * R ...
 %	- phase*ones(diameter) ) + 0.25*sin(2*pi*8/(2*pi)*T );
-grating(:,:,1) =   mean * ones(diameter) + amplitude*sin(2*pi* cyclePerPixel * R) .* sin(2*pi*8/(2*pi)*T );
+syms x;
+
+symSpatialFreqFun = int((8-0.16*x),[0,x])
+spatialFreqFun = matlabFunction(symSpatialFreqFun)
+
+%subs(fun,t,R) 
+% subs(int((-1/3*t+20),[0,t]),t,degPerPix*R)
+ 
+grating(:,:,1) =   mean * ones(diameter) + amplitude*sin(2*pi*fun(degPerPix*R)) .* sin(2*pi*8 /(2*pi)*T );
+%grating(:,:,1) =   mean * ones(diameter) + amplitude*sin(2*pi* -(2*(degPerPix * R) .* (degPerPix * R -100 ))/25) .* sin(2*pi*8/(2*pi)*T );
+
+%grating(:,:,1) =   mean * ones(diameter) + amplitude*sin(2*pi* cyclePerPixel * R) .* sin(2*pi*8/(2*pi)*T );
 
 %grating(:,:,1) =  mean * ones(diameter) + 0.25*sin(2*pi*8/(2*pi)*T );
 
@@ -148,7 +165,7 @@ Screen('FramePoly', window, [0 0 0],framePoly);
 % Screen('FillOval', window, [0 0 0], fixBackRect);
 Screen('FillOval', window, [1 0 0], fixRect);
 Screen('Flip', window);
-
+ 
 disp('2');
 
 % Flip to the screen
