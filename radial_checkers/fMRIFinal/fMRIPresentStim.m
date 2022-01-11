@@ -80,13 +80,14 @@ try
         if psychtoolbox_forp_id==-1
             error('No FORP-Device detected on your system');
         end
+        psychtoolbox_forp_id=0;
     end
     
     keysOfInterest=zeros(1,256);
 	keysOfInterest(KbName('t'))=1;
 	% only look for t as trigger
     % disp(psychtoolbox_forp_id);
-	KbQueueCreate(-1, keysOfInterest);	
+	KbQueueCreate(psychtoolbox_forp_id, keysOfInterest);	
 	KbQueueStart;
     
     [keyPress, keyTime, keyID] = KbCheck(-1);
@@ -161,8 +162,8 @@ try
     %stim(1) = OutwardStimulus('/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/GratingStimulus1.m',diameter,screenProperties);
     %stim(2) = PulseStimulus('/home/prateek/McGill/BIC/psychtoolbox_stimulus/radial_checkers/fMRIFinal/GratingStimulus1.m',1, diameter,screenProperties);
 
-    Screen('TextSize',windowPtr,120);
-    textMessage = 'Loading stimulus ...';
+    Screen('TextSize',windowPtr,100);
+    textMessage = 'Loading stimulus';
     textRect = Screen(windowPtr, 'TextBounds', textMessage);
     textWidth = textRect(3) - textRect(1);
     textHeight = textRect(4) - textRect(2);
@@ -206,8 +207,8 @@ try
 
     %% Wait Screen
     Screen('FillRect', windowPtr, [0.5 0.5 0.5]);
-    Screen('TextSize',windowPtr,120);
-    textMessage = 'Please wait for the experiment to start ...';
+    Screen('TextSize',windowPtr,100);
+    textMessage = 'The experiment will start shortly';
     textRect = Screen(windowPtr, 'TextBounds', textMessage);
     textWidth = textRect(3) - textRect(1);
     textHeight = textRect(4) - textRect(2);

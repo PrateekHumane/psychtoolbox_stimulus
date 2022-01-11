@@ -11,11 +11,7 @@ fixColor = [1 0 0];
 screenDiagonalSize = 81.28; % screen diagonal size in cm
 viewingDistance = 100; %subject distance to screen in cm
 
-%% File specifc Parameters
-%load in frame params
-
-
-%% List of paradigms 
+%% Paradigm Timing
 % List of conditions (DO NOT EDIT)
 conditionNone	= 0;
 conditionStim	= 1;
@@ -32,7 +28,7 @@ conditionEnd	= 2;
 %     11   conditionEnd;    
 %     ];
 firstBaselineEnd = 3;
-numCycles 		 = 24;
+numCycles 		 = 16;
 cycleStim		 = 1;
 cycleBaseline	 = 1;
 
@@ -49,7 +45,7 @@ runParadigmTest = [
     20   conditionStim;
     30   conditionNone;
     42   conditionStim;    
-    56   conditionNone;
+    56   conditionNone; 
     72   conditionEnd;    
     ];
 
@@ -58,7 +54,7 @@ runParadigmTest = [
 % 15 volume baseline
 % then 16 cycles of 10 volumes stimulus then 12 baseline
 firstBaselineEnd = 18;
-numCycles 		 = 24;
+numCycles 		 = 16;
 cycleStim		 = 12;
 cycleBaseline	 = 12;
 
@@ -75,11 +71,11 @@ runParadigmFinal(end,1)=runParadigmFinal(end,1)+5;
 % order of stimulus presentation:
 
 stimRunIndices(:,:,1) = [
-    1:24;
+    2, 3, 6, 7, 8, 11, 12, 14, 15, 16, 18, 19, 20, 22, 23, 24;
 ];
 
 stimRunIndices(:,:,2) = [
-    24:-1:1;
+    24, 23 ,22, 20, 19, 18, 16 ,15, 14, 12, 11, 8, 7, 6, 3, 2;
 ];
 
 % stimRunIndices(:,:,3) = [
@@ -111,11 +107,11 @@ function stim = generateStim(paradigmNumber)
             stim{4} = CheckerPulseStimulus(stimParams, 2);
 
             GratingStimulus1
-			stim{5} = CheckerFlickerStimulus(stimParams,16);
+			stim{5} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus2
 			stim{6} = CheckerFlickerStimulus(stimParams,2);
 			GratingStimulus3
-			stim{7} = CheckerFlickerStimulus(stimParams,16);
+			stim{7} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus4
 			stim{8} = CheckerFlickerStimulus(stimParams,2);
 
@@ -129,11 +125,11 @@ function stim = generateStim(paradigmNumber)
             stim{12} = CheckerPulseStimulus(stimParams, 2);
             
 			GratingStimulus5
-			stim{13} = CheckerFlickerStimulus(stimParams, 16);
+			stim{13} = CheckerFlickerStimulus(stimParams, 8);
 			GratingStimulus6
 			stim{14} = CheckerFlickerStimulus(stimParams, 2);
 			GratingStimulus7
-			stim{15} = CheckerFlickerStimulus(stimParams, 16);
+			stim{15} = CheckerFlickerStimulus(stimParams, 8);
 			GratingStimulus8
 			stim{16} = CheckerFlickerStimulus(stimParams, 2);
             
@@ -147,11 +143,11 @@ function stim = generateStim(paradigmNumber)
             stim{20} = CheckerPulseStimulus(stimParams, 2);
 
             GratingStimulus9
-			stim{21} = CheckerFlickerStimulus(stimParams,16);
+			stim{21} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus10
 			stim{22} = CheckerFlickerStimulus(stimParams,2);
 			GratingStimulus11
-			stim{23} = CheckerFlickerStimulus(stimParams,16);
+			stim{23} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus12
 			stim{24} = CheckerFlickerStimulus(stimParams,2);
         case 2
@@ -165,11 +161,11 @@ function stim = generateStim(paradigmNumber)
             stim{4} = CheckerPulseStimulus(stimParams, 2);
 
             GratingStimulus1
-			stim{5} = CheckerFlickerStimulus(stimParams,16);
+			stim{5} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus2
 			stim{6} = CheckerFlickerStimulus(stimParams,2);
 			GratingStimulus3
-			stim{7} = CheckerFlickerStimulus(stimParams,16);
+			stim{7} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus4
 			stim{8} = CheckerFlickerStimulus(stimParams,2);
 
@@ -183,11 +179,11 @@ function stim = generateStim(paradigmNumber)
             stim{12} = CheckerPulseStimulus(stimParams, 2);
             
 			GratingStimulus5
-			stim{13} = CheckerFlickerStimulus(stimParams, 16);
+			stim{13} = CheckerFlickerStimulus(stimParams, 8);
 			GratingStimulus6
 			stim{14} = CheckerFlickerStimulus(stimParams, 2);
 			GratingStimulus7
-			stim{15} = CheckerFlickerStimulus(stimParams, 16);
+			stim{15} = CheckerFlickerStimulus(stimParams, 8);
 			GratingStimulus8
 			stim{16} = CheckerFlickerStimulus(stimParams, 2);
             
@@ -201,11 +197,11 @@ function stim = generateStim(paradigmNumber)
             stim{20} = CheckerPulseStimulus(stimParams, 2);
 
             GratingStimulus9
-			stim{21} = CheckerFlickerStimulus(stimParams,16);
+			stim{21} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus10
 			stim{22} = CheckerFlickerStimulus(stimParams,2);
 			GratingStimulus11
-			stim{23} = CheckerFlickerStimulus(stimParams,16);
+			stim{23} = CheckerFlickerStimulus(stimParams,8);
 			GratingStimulus12
 			stim{24} = CheckerFlickerStimulus(stimParams,2);
     end	

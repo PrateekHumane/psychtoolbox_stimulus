@@ -12,7 +12,7 @@ classdef CheckerPulseStimulus < handle
       function obj = CheckerPulseStimulus(checkerStimParams, pulseTime)
         if nargin>=1  && isfield(checkerStimParams,'mean') ...
                      && isfield(checkerStimParams,'amplitude') ...
-                     && isfield(checkerStimParams,'spatialFreqFun') ...
+                     && isfield(checkerStimParams,'spatialF') ...
                      && isfield(checkerStimParams,'gratingSpeed') ...
                      && isfield(checkerStimParams,'gratingColor') ...                     
                      && isfield(checkerStimParams,'cyclesPerRotation')
@@ -40,7 +40,7 @@ classdef CheckerPulseStimulus < handle
 
       function obj = createTextures(obj, diameter,screenProperties)
 
-%        cyclePerPixel = obj.stimParams.spatialF*screenProperties.degPerPix; %spatialF in cyclesPerDeg
+        cyclePerPixel = obj.stimParams.spatialF*screenProperties.degPerPix; %spatialF in cyclesPerDeg
 		radius = diameter/2;
         [X,Y] = meshgrid(-radius(1):1:radius(1),-radius(2):1:radius(2));
         R = sqrt(X.^2+Y.^2);
@@ -57,20 +57,21 @@ classdef CheckerPulseStimulus < handle
         % 1/cycles/frame = frames/cycle
 
         % number frames for one cycle
-        numFrames=round(1/(obj.stimParams.gratingSpeed*screenProperties.ifi)); % temporal period, in frames, of the drifting grating
+        numFrames=round(1/(obj.stimParams.gratingSpeed*obj.stimParams.spatialF*screenProperties.ifi)); % temporal period, in frames, of the drifting grating
         obj.numFrames = numFrames;
         for i=1:numFrames
             phase=(i/numFrames)*2*pi;
             switch obj.stimParams.gratingColor
                 case colorBlackAndWhite
                     grating = zeros([size(R), 1]);
-                    grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*sin(2*pi*obj.stimParams.spatialFreqFun(screenProperties.degPerPix*R)- phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+                    grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*sin(2*pi* cyclePerPixel * R - phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
                     %grating(:,:,2) = (R <= diameter/2); % alpha mask for circle
                 case colorRedAndGreen
                     grating = zeros([size(R), 3]);
-                    sinMatrix = sin(2*pi*obj.stimParams.spatialFreqFun(screenProperties.degPerPix*R) - phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
-                    grating(:,:,1) = obj.stimParams.amplitude*(sinMatrix.*(sinMatrix >= 0));
-                    grating(:,:,2) = obj.stimParams.amplitude*abs(sinMatrix.*(sinMatrix <= 0));                    
+                    sinMatrix = sin(2*pi* cyclePerPixel * R - phase*ones(size(R))) .* sin(2*pi*obj.stimParams.cyclesPerRotation/(2*pi)*T );
+                    grating(:,:,1) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*(sinMatrix.*(sinMatrix >= 0))-obj.stimParams.amplitude/2*abs(sinMatrix.*(sinMatrix <= 0));
+                    grating(:,:,2) = obj.stimParams.mean * ones(size(R)) + obj.stimParams.amplitude*abs(sinMatrix.*(sinMatrix <= 0))-obj.stimParams.amplitude/2*(sinMatrix.*(sinMatrix >= 0));
+                    grating(:,:,3) = obj.stimParams.mean * ones(size(R)) - obj.stimParams.amplitude/2*(sinMatrix.*(sinMatrix >= 0))-obj.stimParams.amplitude/2*abs(sinMatrix.*(sinMatrix <= 0));
             end
 
             obj.tex(i) = Screen('MakeTexture', screenProperties.window, grating);
